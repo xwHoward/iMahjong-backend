@@ -16,10 +16,14 @@ AV.Cloud.define('getNearbyMatches', function(request) {
     }
     var query = new AV.Query('Match');
     var point = new AV.GeoPoint(params.latitude, params.longitude);
-    query.withinKilometers('whereCreated', point, 2.0);
+    query.withinKilometers('whereCreated', point, 10.0);
     return query.find()
         .then(function(results) {
-            var nearbyMatches = results;
+            var nearbyMatches = results.map(el => {
+                let match = el.get('baseInfo')
+                Object.assign(match, { id: el.id })
+                return match
+            });
             return {
                 isSuccess: true,
                 data: nearbyMatches
@@ -29,9 +33,8 @@ AV.Cloud.define('getNearbyMatches', function(request) {
 
 // 组局
 AV.Cloud.define('createMatch', function(request) {
-    log(request.params)
+    // log(request.params)
     const params = request.params;
-    // log(request.currentUser)
     const creator = AV.Object.createWithoutData('_User', request.currentUser.id);
     var match = new Match();
     var baseInfo = {
