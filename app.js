@@ -34,7 +34,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 function checkSignature(timestamp, nonce, signature) {
-    const token = 'xwhimahjong';
+    const token = 'imahjong';
     var tempArr = [token, timestamp, nonce];
     tempArr.sort();
     const tempStr = tempArr.join('');
@@ -49,12 +49,10 @@ app.get('/', function(req, res) {
     res.render('index', { currentTime: new Date() });
 });
 app.get('/wxpush', function(req, res) {
-    console.log('wxpush(query):', req.query);
-    console.log('wxpush(params):', req.params);
     if (checkSignature(req.query.timestamp, req.query.nonce, req.query.signature)) {
-        res.end(res.query.echostr);
+        res.end(req.query.echostr);
     } else {
-        res.end('err')
+        res.end('error')
     }
 });
 
