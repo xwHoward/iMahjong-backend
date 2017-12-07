@@ -49,9 +49,10 @@ app.get('/', function(req, res) {
     res.render('index', { currentTime: new Date() });
 });
 app.get('/wxpush', function(req, res) {
-    console.log('wxpush:', req.params);
-    if (checkSignature(req.params.timestamp, req.params.nonce, req.params.signature)) {
-        res.end(res.params.echostr);
+    console.log('wxpush(query):', req.query);
+    console.log('wxpush(params):', req.params);
+    if (checkSignature(req.query.timestamp, req.query.nonce, req.query.signature)) {
+        res.end(res.query.echostr);
     } else {
         res.end('err')
     }
