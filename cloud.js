@@ -7,6 +7,7 @@ function log(item) {
 
 // 获取附近的局
 AV.Cloud.define('getNearbyMatches', function(request) {
+    log('getNearbyMatches()')
     const params = request.params;
     if (params.latitude === undefined || params.longitude === undefined) {
         return {
@@ -26,14 +27,47 @@ AV.Cloud.define('getNearbyMatches', function(request) {
             });
             return {
                 isSuccess: true,
-                data: nearbyMatches
+                data: nearbyMatches,
+                total: nearbyMatches.length
             };
-        }, function(error) {});
+        }, function(error) {
+            return {
+                isSuccess: false,
+                msg: '获取附近组局失败'
+            };
+        });
+});
+
+// 获取局详情
+AV.Cloud.define('getMatchDetail', function(request) {
+    log('getMatchDetail()')
+    const params = request.params;
+    if (params.matchId === undefined) {
+        return {
+            isSuccess: false,
+            msg: '缺少参数'
+        };
+    }
+    var query = new AV.Query('Match');
+    return query.get(params.matchId)
+        .then(function(match) {
+            // 成功获得实例
+            return {
+                isSuccess: true,
+                data: match.get('baseInfo')
+            };
+        }, function(error) {
+            // 异常处理
+            return {
+                isSuccess: false,
+                msg: '获取对局详情失败'
+            };
+        });
 });
 
 // 组局
 AV.Cloud.define('createMatch', function(request) {
-    // log(request.params)
+    log('createMatch()')
     const params = request.params;
     const creator = AV.Object.createWithoutData('_User', request.currentUser.id);
     var match = new Match();
@@ -49,6 +83,8 @@ AV.Cloud.define('createMatch', function(request) {
     };
     // 基础信息
     match.set('baseInfo', baseInfo);
+    // formId
+    match.set('formId', params.formId);
     // 创建者
     match.set('creator', creator);
     // 组局对象
