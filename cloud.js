@@ -7,7 +7,6 @@ function log(item) {
 
 // 获取附近的局
 AV.Cloud.define('getNearbyMatches', function(request) {
-    log('getNearbyMatches()')
     const params = request.params;
     if (params.latitude === undefined || params.longitude === undefined) {
         return {
@@ -15,9 +14,49 @@ AV.Cloud.define('getNearbyMatches', function(request) {
             msg: '缺少参数'
         };
     }
+    log(`getNearbyMatches('${params.latitude}','${params.longitude}')`)
     var query = new AV.Query('Match');
+    query.select(['id', 'baseInfo']);
     var point = new AV.GeoPoint(params.latitude, params.longitude);
     query.withinKilometers('whereCreated', point, 10.0);
+    return query.find()
+        .then(function(results) {
+            var nearbyMatches = results.map(el => {
+                let match = el.get('baseInfo')
+                Object.assign(match, { id: el.id })
+                return match
+            });
+            return {
+                isSuccess: true,
+                data: nearbyMatches,
+                total: nearbyMatches.length
+            };
+        }, function(error) {
+            return {
+                isSuccess: false,
+                msg: '获取附近组局失败'
+            };
+        });
+});
+
+// 获取附近的局
+AV.Cloud.define('getFilteredMatches', function(request) {
+    const { filter, filterParams } = request.params;
+    if (filter === undefined) {
+        return {
+            isSuccess: false,
+            msg: '缺少参数'
+        };
+    }
+    log(`getFilteredMatches('${filter}','${filterParams.toString()}')`)
+    var query = new AV.Query('Match');
+    query.select(['id', 'baseInfo']);
+    if (filter === 'address') {
+        var point = new AV.GeoPoint(filterParams.latitude, filterParams.longitude);
+        query.withinKilometers('whereCreated', point, 10.0);
+    } else if (filter === 'time') {
+        query.greaterThanOrEqualTo('createdAt', new Date(filterParams.time));
+    }
     return query.find()
         .then(function(results) {
             var nearbyMatches = results.map(el => {
@@ -95,7 +134,7 @@ AV.Cloud.define('createMatch', function(request) {
     const geoPoint = new AV.GeoPoint(params.creatorLocation.latitude, params.creatorLocation.longitude)
     match.set('whereCreated', geoPoint);
     // 时间
-    match.set('_time', params._time);
+    match.set('startAt', params.startAt);
     return match.save()
         .then(function(_match) {
             return {
