@@ -16,7 +16,6 @@ AV.Cloud.define('getNearbyMatches', function(request) {
     }
     log(`getNearbyMatches('${params.latitude}','${params.longitude}')`)
     var query = new AV.Query('Match');
-    query.select(['id', 'baseInfo']);
     var point = new AV.GeoPoint(params.latitude, params.longitude);
     query.withinKilometers('whereCreated', point, 10.0);
     return query.find()
@@ -55,7 +54,7 @@ AV.Cloud.define('getFilteredMatches', function(request) {
         var point = new AV.GeoPoint(filterParams.latitude, filterParams.longitude);
         query.withinKilometers('whereCreated', point, 10.0);
     } else if (filter === 'time') {
-        query.greaterThanOrEqualTo('createdAt', new Date(filterParams.time));
+        query.greaterThanOrEqualTo('startAt', new Date());
     }
     return query.find()
         .then(function(results) {
