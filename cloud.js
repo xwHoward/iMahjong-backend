@@ -49,12 +49,24 @@ AV.Cloud.define('getFilteredMatches', function(request) {
     }
     log(`getFilteredMatches('${filter}','${filterParams.toString()}')`)
     var query = new AV.Query('Match');
-    query.select(['id', 'baseInfo']);
+    // query.select(['id', 'baseInfo']);
     if (filter === 'address') {
         var point = new AV.GeoPoint(filterParams.latitude, filterParams.longitude);
-        query.withinKilometers('whereCreated', point, 10.0);
+        query.withinKilometers('whereCreated', point, 20.0);
     } else if (filter === 'time') {
         query.greaterThanOrEqualTo('startAt', new Date());
+        query.ascending('startAt', new Date());
+    } else if (filter === 'group') {
+        // const teenagers = [18, 25];
+        // const youths = [26, 30];
+        // const middleAged = [31, 45];
+        // const elders = [46, 99];
+        // const all = [18, 99];
+        // query.containsAll('groupRange', teenagers);
+        // query.containsAll('groupRange', youths);
+        // query.containsAll('groupRange', middleAged);
+        // query.containsAll('groupRange', elders);
+        // query.containsAll('groupRange', teenagers);
     }
     return query.find()
         .then(function(results) {
@@ -133,7 +145,7 @@ AV.Cloud.define('createMatch', function(request) {
     const geoPoint = new AV.GeoPoint(params.creatorLocation.latitude, params.creatorLocation.longitude)
     match.set('whereCreated', geoPoint);
     // 时间
-    match.set('startAt', params.startAt);
+    match.set('startAt', new Date(params.startAt));
     return match.save()
         .then(function(_match) {
             return {
